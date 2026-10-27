@@ -2241,7 +2241,7 @@ overflow:visible;
   width: 270px;
   height: 150px;
   right: 0;
-top: -165px;
+top: -145px;
 overflow:visible;
   text-align: center;
 }
@@ -2869,38 +2869,4 @@ nav a {
     gap: 12px !important;
   }
 }
-/* 자재 카탈로그 안내 */
-.materials-catalog-guide {
-  margin: 28px auto 0;
-  text-align: center;
-}
 
-.materials-catalog-guide p {
-  margin-bottom: 16px;
-  color: #64748b;
-  font-size: 15px;
-  line-height: 1.7;
-}
-
-.materials-catalog-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 22px;
-  border: 1px solid #10233f;
-  border-radius: 999px;
-  color: #10233f;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.materials-catalog-btn:hover {
-  background-color: #10233f;
-  color: #ffffff;
-}
-
-.materials-catalog-btn span {
-  font-size: 17px;
-}
