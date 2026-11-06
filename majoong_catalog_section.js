@@ -23,9 +23,14 @@ document.addEventListener('DOMContentLoaded', function(){
   const zR = $('zoomRight');
   const zStatus = $('zoomStatus');
 
-  // CSS와 동일한 기준으로 모바일에서는 한 장씩, PC에서는 두 장씩 표시
-  const mobileQuery = window.matchMedia('(max-width: 600px)');
-  const isMobile = () => mobileQuery.matches;
+  // 모바일/터치 기기에서는 한 장씩, PC에서는 두 장씩 표시
+  const mobileQuery = window.matchMedia('(max-width: 900px), (pointer: coarse)');
+  // 실제 화면에서 CSS가 오른쪽 페이지를 숨겼는지도 함께 확인합니다.
+  // CSS는 모바일인데 JS가 PC로 판정해 1, 3, 5페이지로 건너뛰는 문제를 막습니다.
+  const isMobile = () => {
+    const cssUsesSinglePage = right && window.getComputedStyle(right).display === 'none';
+    return mobileQuery.matches || Boolean(cssUsesSinglePage);
+  };
 
   function setImage(img, n){
     if(!img) return;
@@ -88,8 +93,9 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function nextCatalog(){
-    const step = isMobile() ? 1 : 2;
-    const lastStart = isMobile() ? catalogTotal : catalogTotal - 1;
+    const mobile = isMobile();
+    const step = mobile ? 1 : 2;
+    const lastStart = mobile ? catalogTotal : catalogTotal - 1;
 
     if(catalogCurrent + step <= lastStart){
       catalogCurrent += step;
@@ -98,7 +104,8 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function prevCatalog(){
-    const step = isMobile() ? 1 : 2;
+    const mobile = isMobile();
+    const step = mobile ? 1 : 2;
 
     if(catalogCurrent > 1){
       catalogCurrent = Math.max(1, catalogCurrent - step);

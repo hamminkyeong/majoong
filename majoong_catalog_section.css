@@ -2892,3 +2892,24 @@ nav a {
     object-fit: contain !important;
   }
 }
+
+
+/* 모바일/터치 기기 카탈로그: 한 장씩만 보이도록 강제 */
+@media (max-width: 768px), (pointer: coarse) {
+  .catalog-reader .book-pages {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    aspect-ratio: 0.72 / 1 !important;
+  }
+  .catalog-reader .book-pages .page.left {
+    display: flex !important;
+    width: 100% !important;
+    grid-column: 1 !important;
+  }
+  .catalog-reader .book-pages .page.right {
+    display: none !important;
+  }
+  .catalog-reader .book-pages::after {
+    display: none !important;
+  }
+}
