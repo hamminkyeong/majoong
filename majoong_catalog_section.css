@@ -2241,7 +2241,7 @@ overflow:visible;
   width: 270px;
   height: 150px;
   right: 0;
-top: -145px;
+top: -165px;
 overflow:visible;
   text-align: center;
 }
@@ -2844,29 +2844,51 @@ nav a {
   }
 }
 
-/* 모바일에서 마중이 크기 조정 */
-@media (max-width: 700px) {
-  .intro-image-slot.mascot-slider {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 320px !important;
-    max-height: 320px !important;
-    margin: 10px auto 0 !important;
-    overflow: hidden !important;
+
+/* =========================================================
+   카탈로그 모바일 한 페이지 보기 보정
+   PC의 양면 펼침은 유지하고, 모바일 확대창은 한 장만 표시
+   ========================================================= */
+@media (max-width: 600px) {
+  .book-pages {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .book-pages .page.left {
+    display: flex !important;
+    width: 100%;
+  }
+  .book-pages .page.right {
+    display: none !important;
+  }
+  .book-pages::after {
+    display: none !important;
   }
 
-  .intro-image-slot.mascot-slider .mascot-slide {
-    width: 290px !important;
-    height: 310px !important;
+  .zoom-window {
+    padding: 54px 10px 76px !important;
+  }
+  .zoom-book {
+    width: min(88vw, 460px) !important;
+    height: auto !important;
+    aspect-ratio: 0.72 / 1 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding: 5px !important;
+    gap: 0 !important;
+  }
+  .zoom-book .zoom-page:first-child {
+    display: flex !important;
+    width: 100%;
+    border-radius: 7px !important;
+    box-shadow: none !important;
+  }
+  .zoom-book .zoom-page:last-child {
+    display: none !important;
+  }
+  .zoom-book .zoom-page .catalog-img {
+    width: 100% !important;
+    height: 100% !important;
     max-width: 100% !important;
     max-height: 100% !important;
     object-fit: contain !important;
-    object-position: center !important;
-  }
-
-  .intro-inner {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
   }
 }
-
