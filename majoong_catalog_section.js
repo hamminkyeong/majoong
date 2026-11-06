@@ -23,199 +23,136 @@ document.addEventListener('DOMContentLoaded', function(){
   const zR = $('zoomRight');
   const zStatus = $('zoomStatus');
 
+  // CSS와 동일한 기준으로 모바일에서는 한 장씩, PC에서는 두 장씩 표시
+  const mobileQuery = window.matchMedia('(max-width: 600px)');
+  const isMobile = () => mobileQuery.matches;
 
   function setImage(img, n){
-
     if(!img) return;
 
-    if(n >= 1 && n <= catalogTotal){
-
+    if(Number.isInteger(n) && n >= 1 && n <= catalogTotal){
       img.src = imgPath(n);
       img.style.display = 'block';
-
     }else{
-
       img.removeAttribute('src');
       img.style.display = 'none';
-
     }
-
   }
 
-
   function drawCatalog(){
+    const mobile = isMobile();
+    const secondPage = mobile ? null : catalogCurrent + 1;
+    const lastShown = mobile
+      ? catalogCurrent
+      : Math.min(catalogCurrent + 1, catalogTotal);
 
+    // 본문 카탈로그
     setImage(left, catalogCurrent);
-    setImage(right, catalogCurrent + 1);
+    setImage(right, secondPage);
 
     if(noL){
-      noL.textContent =
-        catalogCurrent <= catalogTotal
-          ? catalogCurrent
-          : '';
+      noL.textContent = catalogCurrent <= catalogTotal ? catalogCurrent : '';
     }
-
     if(noR){
-      noR.textContent =
-        catalogCurrent + 1 <= catalogTotal
-          ? catalogCurrent + 1
-          : '';
+      noR.textContent = mobile || catalogCurrent + 1 > catalogTotal
+        ? ''
+        : catalogCurrent + 1;
     }
 
     if(pageStatus){
-
-      pageStatus.textContent =
-        `${catalogCurrent}–${Math.min(
-          catalogCurrent + 1,
-          catalogTotal
-        )} / ${catalogTotal}`;
-
+      pageStatus.textContent = mobile
+        ? `${catalogCurrent} / ${catalogTotal}`
+        : `${catalogCurrent}–${lastShown} / ${catalogTotal}`;
     }
 
-
-    if(
-      modal &&
-      modal.classList.contains('open')
-    ){
-
+    // 확대 보기 역시 모바일은 한 장, PC는 두 장
+    if(modal && modal.classList.contains('open')){
       setImage(zL, catalogCurrent);
-      setImage(zR, catalogCurrent + 1);
+      setImage(zR, secondPage);
 
       if(zStatus){
-
-        zStatus.textContent =
-          `${catalogCurrent}–${Math.min(
-            catalogCurrent + 1,
-            catalogTotal
-          )}`;
-
+        zStatus.textContent = mobile
+          ? `${catalogCurrent} / ${catalogTotal}`
+          : `${catalogCurrent}–${lastShown} / ${catalogTotal}`;
       }
-
     }
 
+    const prevButtons = [$('prevBtn'), $('zoomPrev')].filter(Boolean);
+    const nextButtons = [$('nextBtn'), $('zoomNext')].filter(Boolean);
+    prevButtons.forEach(button => button.disabled = catalogCurrent <= 1);
+    nextButtons.forEach(button => {
+      button.disabled = mobile
+        ? catalogCurrent >= catalogTotal
+        : catalogCurrent + 1 >= catalogTotal;
+    });
   }
-
 
   function nextCatalog(){
+    const step = isMobile() ? 1 : 2;
+    const lastStart = isMobile() ? catalogTotal : catalogTotal - 1;
 
-    if(catalogCurrent + 2 <= catalogTotal){
-
-      catalogCurrent += 2;
-
+    if(catalogCurrent + step <= lastStart){
+      catalogCurrent += step;
       drawCatalog();
-
     }
-
   }
-
 
   function prevCatalog(){
+    const step = isMobile() ? 1 : 2;
 
     if(catalogCurrent > 1){
-
-      catalogCurrent =
-        Math.max(
-          1,
-          catalogCurrent - 2
-        );
-
+      catalogCurrent = Math.max(1, catalogCurrent - step);
       drawCatalog();
-
     }
-
   }
 
-
-  if($('prevBtn')){
-    $('prevBtn').onclick = prevCatalog;
-  }
-
-  if($('nextBtn')){
-    $('nextBtn').onclick = nextCatalog;
-  }
-
-  if($('zoomPrev')){
-    $('zoomPrev').onclick = prevCatalog;
-  }
-
-  if($('zoomNext')){
-    $('zoomNext').onclick = nextCatalog;
-  }
-
+  if($('prevBtn')) $('prevBtn').onclick = prevCatalog;
+  if($('nextBtn')) $('nextBtn').onclick = nextCatalog;
+  if($('zoomPrev')) $('zoomPrev').onclick = prevCatalog;
+  if($('zoomNext')) $('zoomNext').onclick = nextCatalog;
 
   if($('zoomBtn')){
-
     $('zoomBtn').onclick = function(){
-
       if(!modal) return;
-
       modal.classList.add('open');
-
-      modal.setAttribute(
-        'aria-hidden',
-        'false'
-      );
-
+      modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-
       drawCatalog();
-
     };
-
   }
-
 
   function closeModal(){
-
     if(!modal) return;
-
     modal.classList.remove('open');
-
-    modal.setAttribute(
-      'aria-hidden',
-      'true'
-    );
-
+    modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-
   }
 
-
-  if($('closeBtn')){
-    $('closeBtn').onclick = closeModal;
-  }
-
-  if($('zoomBg')){
-    $('zoomBg').onclick = closeModal;
-  }
-
+  if($('closeBtn')) $('closeBtn').onclick = closeModal;
+  if($('zoomBg')) $('zoomBg').onclick = closeModal;
 
   document.addEventListener('keydown', function(e){
-
-    if(
-      !modal ||
-      !modal.classList.contains('open')
-    ){
-      return;
-    }
-
-    if(e.key === 'Escape'){
-      closeModal();
-    }
-
-    if(e.key === 'ArrowLeft'){
-      prevCatalog();
-    }
-
-    if(e.key === 'ArrowRight'){
-      nextCatalog();
-    }
-
+    if(!modal || !modal.classList.contains('open')) return;
+    if(e.key === 'Escape') closeModal();
+    if(e.key === 'ArrowLeft') prevCatalog();
+    if(e.key === 'ArrowRight') nextCatalog();
   });
 
+  // 화면 방향이나 창 크기가 바뀌면 표시 모드만 전환
+  function handleCatalogModeChange(){
+    if(!isMobile() && catalogCurrent % 2 === 0){
+      catalogCurrent = Math.max(1, catalogCurrent - 1);
+    }
+    drawCatalog();
+  }
+
+  if(typeof mobileQuery.addEventListener === 'function'){
+    mobileQuery.addEventListener('change', handleCatalogModeChange);
+  }else if(typeof mobileQuery.addListener === 'function'){
+    mobileQuery.addListener(handleCatalogModeChange);
+  }
 
   drawCatalog();
-
 
 
   /* =================================
@@ -455,43 +392,6 @@ document.addEventListener("DOMContentLoaded", () => {
     Array.from(
       document.querySelectorAll("#noticeSlider .notice-item")
     );
-const recentList =
-  document.querySelector(".recent-news-list");
-
-const recentTotal =
-  document.querySelector(".recent-news-title small");
-
-if(recentList){
-
-  recentList.innerHTML = "";
-
-  items.forEach((item, index) => {
-
-    const title =
-      item.querySelector("h3")?.textContent.trim() || "";
-
-    const button =
-      document.createElement("button");
-
-    button.type = "button";
-
-button.textContent =
-  `${String(index + 1).padStart(2,"0")}　${title}`;
-
-button.addEventListener("click", function(){
-  showBoard(Math.floor(index / itemsPerPage));
-});
-
-recentList.appendChild(button);
-
-  });
-
-  if(recentTotal){
-    recentTotal.textContent =
-      `전체 ${items.length}개`;
-  }
-
-}
 
   const prev =
     document.getElementById("boardPrev");
@@ -746,15 +646,3 @@ if (mascotSlides.length > 1) {
   }, 3000);
 
 }
-const noticeToggle = document.querySelector(".notice-toggle");
-const noticeContent = document.querySelector(".fixed-notice-content");
-
-noticeToggle.addEventListener("click", function () {
-  if (noticeContent.style.display === "block") {
-    noticeContent.style.display = "none";
-    noticeToggle.textContent = "˅";
-  } else {
-    noticeContent.style.display = "block";
-    noticeToggle.textContent = "˄";
-  }
-});
