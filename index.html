@@ -107,18 +107,19 @@
   <div class="recent-news-title">
     <span>📰</span>
     <strong>최근 소식</strong>
-    <small>전체 8개</small>
+    <small>전체 10개</small>
   </div>
 
   <div class="recent-news-list" id="recentNewsList">
-    <button type="button">01　안녕하세요! 마중산업입니다.</button>
-    <button type="button">02　다양한 건설자재를 만나보세요.</button>
-    <button type="button">03　마중산업 홈페이지가 새롭게 단장되었습니다.</button>
-    <button type="button">04　마중산업의 새로운 소식을 확인해주세요.</button>
-    <button type="button">05　마중산업에서 취급하는 자재를 소개합니다.</button>
-    <button type="button">06　마중산업의 납품 서비스를 안내드립니다.</button>
-    <button type="button">07　현장에 필요한 자재부터 납품까지!</button>
-    <button type="button">08　마중산업과 함께 안전한 현장을 만들어보세요.</button>
+     <button type="button">01　보리의 행운 가챠 OPEN!</button>
+    <button type="button">02　안녕하세요! 마중산업입니다.</button>
+    <button type="button">03　다양한 건설자재를 만나보세요.</button>
+    <button type="button">04　마중산업 홈페이지가 새롭게 단장되었습니다.</button>
+    <button type="button">05　마중산업의 새로운 소식을 확인해주세요.</button>
+    <button type="button">06　마중산업에서 취급하는 자재를 소개합니다.</button>
+    <button type="button">07　마중산업의 납품 서비스를 안내드립니다.</button>
+    <button type="button">08　현장에 필요한 자재부터 납품까지!</button>
+    <button type="button">09　마중산업과 함께 안전한 현장을 만들어보세요.</button>
 
   </div>
 </aside>
@@ -138,6 +139,20 @@
         </div>
 
         <div class="notice-slider" id="noticeSlider">
+
+          <article class="notice-item">
+            <div class="notice-slide-head">
+              <span class="notice-badge">EVENT</span>
+              <span class="notice-new">NEW</span>
+              <span class="notice-date">2026.11.06</span>
+            </div>
+            <h3>보리의 행운 가챠 OPEN!</h3>
+            <p>보리가 오늘의 응원 한마디와 어울리는 추천 음악을 선물해요.</p>
+            <button class="notice-file gacha-open-btn" type="button" data-open-gacha>
+              🐾 행운 가챠 참여하기
+            </button>
+          </article>
+
 
           <!-- 게시글은 아래에 계속 추가하시면 됩니다.
                현재는 기존에 있던 3개의 게시글만 넣어두었습니다.
@@ -1708,6 +1723,80 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 </script>
 
+
+
+<!-- 보리의 행운 가챠 게시판 팝업 -->
+<div class="gacha-board-modal" id="gachaBoardModal" aria-hidden="true">
+  <div class="gacha-board-backdrop" data-close-gacha></div>
+  <section class="gacha-board-window" role="dialog" aria-modal="true" aria-label="보리의 행운 가챠">
+    <div class="gacha-board-toolbar">
+      <strong>🐾 보리의 행운 가챠</strong>
+      <button type="button" class="gacha-board-close" data-close-gacha aria-label="닫기">×</button>
+    </div>
+    <iframe
+      id="gachaBoardFrame"
+      title="보리의 행운 가챠"
+      data-src="bori-lucky-gacha.html"
+      src="about:blank"
+      loading="lazy"
+      allow="autoplay"
+    ></iframe>
+  </section>
+</div>
+
+<style>
+.gacha-open-btn{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  width:max-content;max-width:100%;padding:10px 17px!important;
+  border:1px solid #e7bd83!important;border-radius:999px!important;
+  background:#fff3df!important;color:#74451f!important;
+  font:inherit;font-weight:700;cursor:pointer;transition:background .15s,transform .15s;
+}
+.gacha-open-btn:hover{background:#ffe6bd!important;transform:translateY(-1px)}
+.gacha-board-modal{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.gacha-board-modal.open{opacity:1;visibility:visible}
+.gacha-board-backdrop{position:absolute;inset:0;background:rgba(35,27,22,.62);backdrop-filter:blur(4px)}
+.gacha-board-window{position:relative;z-index:1;width:min(1120px,96vw);height:min(900px,94vh);background:#fffaf4;border:1px solid #ead8c4;border-radius:18px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.28);display:flex;flex-direction:column}
+.gacha-board-toolbar{height:48px;flex:0 0 48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff8ef;border-bottom:1px solid #f0e2d2;color:#68452d;font-size:14px}
+.gacha-board-close{width:32px;height:32px;border:0;border-radius:50%;background:#f3e8dc;color:#76543d;font-size:24px;line-height:1;cursor:pointer}
+.gacha-board-window iframe{width:100%;height:calc(100% - 48px);border:0;background:#fff6ed}
+body.gacha-modal-open{overflow:hidden}
+@media(max-width:640px){
+ .gacha-board-modal{padding:7px}
+ .gacha-board-window{width:100%;height:96vh;border-radius:12px}
+ .gacha-board-toolbar{height:42px;flex-basis:42px}
+ .gacha-board-window iframe{height:calc(100% - 42px)}
+}
+</style>
+
+<script>
+(function(){
+  const modal = document.getElementById('gachaBoardModal');
+  const frame = document.getElementById('gachaBoardFrame');
+  if(!modal || !frame) return;
+
+  function openGacha(){
+    if(!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank'){
+      frame.setAttribute('src', frame.dataset.src);
+    }
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('gacha-modal-open');
+  }
+  function closeGacha(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('gacha-modal-open');
+    // Stop any animation/audio activity when the popup is closed.
+    frame.setAttribute('src','about:blank');
+  }
+  document.querySelectorAll('[data-open-gacha]').forEach(btn => btn.addEventListener('click', openGacha));
+  modal.querySelectorAll('[data-close-gacha]').forEach(el => el.addEventListener('click', closeGacha));
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && modal.classList.contains('open')) closeGacha();
+  });
+})();
+</script>
 
 </body>
 </html>
