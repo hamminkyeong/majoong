@@ -2913,3 +2913,9 @@ nav a {
     display: none !important;
   }
 }
+/* 모바일: 프로젝트 카드 한 개씩 표시 */
+@media (max-width: 800px) {
+  .record-item {
+    flex: 0 0 100%;
+  }
+}

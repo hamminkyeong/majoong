@@ -198,15 +198,33 @@ document.addEventListener('DOMContentLoaded', function(){
     );
 
 
-  const cardsPerPage = 4;
 
-  let recordPage = 0;
+let cardsPerPage = 4;
+let recordPage = 0;
+let totalRecordPages = 1;
 
+function updateRecordLayout() {
+  if (window.innerWidth <= 800) {
+    cardsPerPage = 1;
+  } else if (window.innerWidth <= 1100) {
+    cardsPerPage = 2;
+  } else {
+    cardsPerPage = 4;
+  }
 
-  const totalRecordPages =
-    Math.ceil(
-      recordItems.length / cardsPerPage
-    );
+  totalRecordPages = Math.ceil(
+    recordItems.length / cardsPerPage
+  );
+
+  recordPage = Math.min(
+    recordPage,
+    totalRecordPages - 1
+  );
+
+  updateRecordLayout();
+
+window.addEventListener("resize", updateRecordLayout);
+
 
 
   recordPrev.style.zIndex = '30';
