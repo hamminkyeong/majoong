@@ -162,51 +162,152 @@ document.addEventListener('DOMContentLoaded', function(){
   drawCatalog();
 
 
-  /* =================================
-     납품실적
-     4개씩 넘기기
-  ================================= */
+  
+/* =================================
+   납품실적
+   PC 4개 / 태블릿 2개 / 모바일 1개
+================================= */
 
-  const recordTrack =
-    document.getElementById('recordTrack');
+const recordTrack =
+  document.getElementById('recordTrack');
 
-  const recordPrev =
-    document.getElementById('recordPrev');
+const recordPrev =
+  document.getElementById('recordPrev');
 
-  const recordNext =
-    document.getElementById('recordNext');
+const recordNext =
+  document.getElementById('recordNext');
 
-  const recordStatus =
-    document.getElementById('recordStatus');
+const recordStatus =
+  document.getElementById('recordStatus');
 
-  const recordDots =
-    document.querySelectorAll('.record-dots button');
-
-
-  if(
-    !recordTrack ||
-    !recordPrev ||
-    !recordNext
-  ){
-    return;
-  }
+const recordDotsContainer =
+  document.querySelector('.record-dots');
 
 
-  const recordItems =
-    Array.from(
-      recordTrack.querySelectorAll('.record-item')
-    );
+if (
+  !recordTrack ||
+  !recordPrev ||
+  !recordNext
+) {
+  return;
+}
 
-
+const recordItems = Array.from(
+  recordTrack.querySelectorAll('.record-item')
+);
 
 let cardsPerPage = 4;
 let recordPage = 0;
-let totalRecordPages = 1;
+let totalRecordPages = 0;
+
+recordPrev.style.zIndex = '30';
+recordNext.style.zIndex = '30';
+
+
+function getCardStep() {
+  if (!recordItems.length) {
+    return 0;
+  }
+
+  const cardWidth =
+    recordItems[0].getBoundingClientRect().width;
+
+  const gap =
+    parseFloat(getComputedStyle(recordTrack).gap) || 0;
+
+  return cardWidth + gap;
+}
+
+
+function drawRecordDots() {
+  if (!recordDotsContainer) {
+    return;
+  }
+
+  recordDotsContainer.innerHTML = '';
+
+  for (let i = 0; i < totalRecordPages; i++) {
+    const dot = document.createElement('button');
+
+    dot.type = 'button';
+    dot.classList.toggle('active', i === recordPage);
+    dot.setAttribute('aria-label', `${i + 1}페이지`);
+
+    dot.addEventListener('click', function () {
+      recordPage = i;
+      drawRecords();
+    });
+
+    recordDotsContainer.appendChild(dot);
+  }
+}
+
+
+function drawRecords() {
+  const step = getCardStep();
+
+  const move =
+    recordPage * cardsPerPage * step;
+
+  recordTrack.style.transform =
+    `translateX(-${move}px)`;
+
+
+  if (recordStatus) {
+    const start =
+      recordPage * cardsPerPage + 1;
+
+    const end =
+      Math.min(
+        start + cardsPerPage - 1,
+        recordItems.length
+      );
+
+    recordStatus.textContent =
+      `${String(start).padStart(2, '0')}–${String(end).padStart(2, '0')} / ${String(recordItems.length).padStart(2, '0')}`;
+  }
+
+
+  if (recordDotsContainer) {
+    Array.from(recordDotsContainer.children).forEach(
+      function (dot, index) {
+        dot.classList.toggle(
+          'active',
+          index === recordPage
+        );
+      }
+    );
+  }
+
+
+  recordPrev.disabled = recordPage === 0;
+
+  recordNext.disabled =
+    recordPage >= totalRecordPages - 1;
+
+  recordPrev.style.opacity =
+    recordPage === 0 ? '.45' : '1';
+
+  recordNext.style.opacity =
+    recordPage >= totalRecordPages - 1 ? '.45' : '1';
+
+  recordPrev.style.display = 'flex';
+  recordNext.style.display = 'flex';
+
+  recordPrev.style.visibility = 'visible';
+  recordNext.style.visibility = 'visible';
+
+  recordPrev.style.pointerEvents = 'auto';
+  recordNext.style.pointerEvents = 'auto';
+}
+
 
 function updateRecordLayout() {
-  if (window.innerWidth <= 800) {
+  const screenWidth = window.innerWidth;
+
+  if (screenWidth <= 800) {
     cardsPerPage = 1;
-  } else if (window.innerWidth <= 1100) {
+  } else if (screenWidth <= 1100) {
     cardsPerPage = 2;
   } else {
     cardsPerPage = 4;
@@ -218,192 +319,40 @@ function updateRecordLayout() {
 
   recordPage = Math.min(
     recordPage,
-    totalRecordPages - 1
+    Math.max(0, totalRecordPages - 1)
   );
 
-  updateRecordLayout();
-
-window.addEventListener("resize", updateRecordLayout);
-
-
-
-  recordPrev.style.zIndex = '30';
-  recordNext.style.zIndex = '30';
-
-
-  function getCardStep(){
-
-    if(!recordItems.length){
-      return 0;
-    }
-
-
-    const cardWidth =
-      recordItems[0]
-        .getBoundingClientRect()
-        .width;
-
-
-    const gap =
-      parseFloat(
-        getComputedStyle(recordTrack).gap
-      ) || 0;
-
-
-    return cardWidth + gap;
-
-  }
-
-
-  function drawRecords(){
-
-    const step =
-      getCardStep();
-
-
-    const move =
-      recordPage *
-      cardsPerPage *
-      step;
-
-
-    recordTrack.style.transform =
-      `translateX(-${move}px)`;
-
-
-    if(recordStatus){
-
-      const start =
-        recordPage *
-        cardsPerPage + 1;
-
-      const end =
-        Math.min(
-          start + cardsPerPage - 1,
-          recordItems.length
-        );
-
-
-      recordStatus.textContent =
-        `${String(start).padStart(2,'0')}–${String(end).padStart(2,'0')} / ${String(recordItems.length).padStart(2,'0')}`;
-
-    }
-
-
-    recordDots.forEach(function(dot,index){
-
-      dot.classList.toggle(
-        'active',
-        index === recordPage
-      );
-
-    });
-
-recordPrev.disabled = false;
-
-recordNext.disabled =
-  recordPage >= totalRecordPages - 1;
-
-
-    recordPrev.style.opacity =
-      recordPage === 0
-        ? '.45'
-        : '1';
-
-    recordNext.style.opacity =
-      recordPage >= totalRecordPages - 1
-        ? '.45'
-        : '1';
-
-
-    recordNext.style.display = 'flex';
-    recordNext.style.visibility = 'visible';
-    recordNext.style.pointerEvents = 'auto';
-
-    recordPrev.style.display = 'flex';
-    recordPrev.style.visibility = 'visible';
-    recordPrev.style.pointerEvents = 'auto';
-
-  }
-
-
-  recordNext.addEventListener(
-    'click',
-    function(e){
-
-      e.preventDefault();
-
-      if(
-        recordPage <
-        totalRecordPages - 1
-      ){
-
-        recordPage++;
-
-        drawRecords();
-
-      }
-
-    }
-  );
-
-
-  recordPrev.addEventListener(
-    'click',
-    function(e){
-
-      e.preventDefault();
-
-      if(recordPage > 0){
-
-        recordPage--;
-
-        drawRecords();
-
-      }
-
-    }
-  );
-
-
-  recordDots.forEach(
-    function(dot,index){
-
-      dot.addEventListener(
-        'click',
-        function(){
-
-          if(
-            index <
-            totalRecordPages
-          ){
-
-            recordPage = index;
-
-            drawRecords();
-
-          }
-
-        }
-      );
-
-    }
-  );
-
-
-  window.addEventListener(
-    'resize',
-    function(){
-
-      drawRecords();
-
-    }
-  );
-
-
+  drawRecordDots();
   drawRecords();
+}
 
+
+recordNext.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (recordPage < totalRecordPages - 1) {
+    recordPage++;
+    drawRecords();
+  }
 });
+
+
+recordPrev.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (recordPage > 0) {
+    recordPage--;
+    drawRecords();
+  }
+});
+
+
+window.addEventListener(
+  'resize',
+  updateRecordLayout
+);
+
+updateRecordLayout();
 
 
 /* =================================
