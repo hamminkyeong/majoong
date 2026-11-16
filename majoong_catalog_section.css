@@ -632,18 +632,9 @@ overflow:visible;
   }
 }
 
-
-/* 태블릿: 한 화면에 2개 */
-@media (max-width:1100px){
-  .record-item{
-    flex: 0 0 calc((100% - 14px) / 2);
-  }
-}
-
-/* 모바일: 한 화면에 1개 */
 @media (max-width:800px){
   .record-item{
-    flex: 0 0 100%;
+    flex-basis:calc((100% - 14px) / 2);
   }
 
   .record-track{
@@ -654,7 +645,6 @@ overflow:visible;
     right:8px;
   }
 }
-
 
 
 /* =================================
@@ -2921,11 +2911,5 @@ nav a {
   }
   .catalog-reader .book-pages::after {
     display: none !important;
-  }
-}
-/* 모바일: 프로젝트 카드 한 개씩 표시 */
-@media (max-width: 800px) {
-  .record-item {
-    flex: 0 0 100%;
   }
 }
