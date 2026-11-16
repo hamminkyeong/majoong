@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function(){
 
   /* =================================
@@ -7,8 +8,15 @@ document.addEventListener('DOMContentLoaded', function(){
   const catalogTotal = 18;
   let catalogCurrent = 1;
 
-  const imgPath = n =>
-    `catalog_pages/page-${String(n).padStart(2,'0')}.jpg`;
+  const mobileQuery = window.matchMedia('(max-width: 900px), (pointer: coarse)');
+
+  const isMobile = () => {
+    const rightPage = document.getElementById('pageRight');
+    const cssUsesSinglePage = rightPage &&
+      window.getComputedStyle(rightPage).display === 'none';
+
+    return mobileQuery.matches || Boolean(cssUsesSinglePage);
+  };
 
   const $ = id => document.getElementById(id);
 
@@ -23,45 +31,96 @@ document.addEventListener('DOMContentLoaded', function(){
   const zR = $('zoomRight');
   const zStatus = $('zoomStatus');
 
-  // 모바일/터치 기기에서는 한 장씩, PC에서는 두 장씩 표시
-  const mobileQuery = window.matchMedia('(max-width: 900px), (pointer: coarse)');
-  // 실제 화면에서 CSS가 오른쪽 페이지를 숨겼는지도 함께 확인합니다.
-  // CSS는 모바일인데 JS가 PC로 판정해 1, 3, 5페이지로 건너뛰는 문제를 막습니다.
-  const isMobile = () => {
-    const cssUsesSinglePage = right && window.getComputedStyle(right).display === 'none';
-    return mobileQuery.matches || Boolean(cssUsesSinglePage);
+
+  // 카탈로그 이미지 경로 후보
+  const imageCandidates = n => {
+    const two = String(n).padStart(2, '0');
+    const one = String(n);
+
+    const names = [
+      `page-${two}.jpg`, `page-${one}.jpg`,
+      `page-${two}.jpeg`, `page-${one}.jpeg`,
+      `page-${two}.png`, `page-${one}.png`,
+      `page_${two}.jpg`, `page_${one}.jpg`,
+      `page_${two}.png`, `page_${one}.png`
+    ];
+
+    const folders = [
+      'catalog_pages/',
+      './catalog_pages/',
+      'images/catalog_pages/'
+    ];
+
+    return folders.flatMap(folder =>
+      names.map(name => folder + name)
+    );
   };
+
 
   function setImage(img, n){
     if(!img) return;
 
-    if(Number.isInteger(n) && n >= 1 && n <= catalogTotal){
-      img.src = imgPath(n);
-      img.style.display = 'block';
-    }else{
+    if(!Number.isInteger(n) || n < 1 || n > catalogTotal){
       img.removeAttribute('src');
       img.style.display = 'none';
+      img.onerror = null;
+      return;
     }
+
+    const candidates = imageCandidates(n);
+    let candidateIndex = 0;
+
+    img.onerror = function(){
+      candidateIndex++;
+
+      if(candidateIndex < candidates.length){
+        img.src = candidates[candidateIndex];
+      }else{
+        img.onerror = null;
+        img.style.display = 'none';
+
+        console.error(
+          `카탈로그 ${n}페이지 이미지를 찾지 못했습니다.`,
+          candidates
+        );
+      }
+    };
+
+    img.onload = function(){
+      img.style.display = 'block';
+    };
+
+    img.style.display = 'block';
+    img.src = candidates[candidateIndex];
   }
+
 
   function drawCatalog(){
     const mobile = isMobile();
-    const secondPage = mobile ? null : catalogCurrent + 1;
+
+    const secondPage = mobile
+      ? null
+      : catalogCurrent + 1;
+
     const lastShown = mobile
       ? catalogCurrent
       : Math.min(catalogCurrent + 1, catalogTotal);
 
-    // 본문 카탈로그
     setImage(left, catalogCurrent);
     setImage(right, secondPage);
 
     if(noL){
-      noL.textContent = catalogCurrent <= catalogTotal ? catalogCurrent : '';
+      noL.textContent =
+        catalogCurrent <= catalogTotal
+          ? catalogCurrent
+          : '';
     }
+
     if(noR){
-      noR.textContent = mobile || catalogCurrent + 1 > catalogTotal
-        ? ''
-        : catalogCurrent + 1;
+      noR.textContent =
+        mobile || catalogCurrent + 1 > catalogTotal
+          ? ''
+          : catalogCurrent + 1;
     }
 
     if(pageStatus){
@@ -70,7 +129,6 @@ document.addEventListener('DOMContentLoaded', function(){
         : `${catalogCurrent}–${lastShown} / ${catalogTotal}`;
     }
 
-    // 확대 보기 역시 모바일은 한 장, PC는 두 장
     if(modal && modal.classList.contains('open')){
       setImage(zL, catalogCurrent);
       setImage(zR, secondPage);
@@ -82,9 +140,20 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
 
-    const prevButtons = [$('prevBtn'), $('zoomPrev')].filter(Boolean);
-    const nextButtons = [$('nextBtn'), $('zoomNext')].filter(Boolean);
-    prevButtons.forEach(button => button.disabled = catalogCurrent <= 1);
+    const prevButtons = [
+      $('prevBtn'),
+      $('zoomPrev')
+    ].filter(Boolean);
+
+    const nextButtons = [
+      $('nextBtn'),
+      $('zoomNext')
+    ].filter(Boolean);
+
+    prevButtons.forEach(button =>
+      button.disabled = catalogCurrent <= 1
+    );
+
     nextButtons.forEach(button => {
       button.disabled = mobile
         ? catalogCurrent >= catalogTotal
@@ -92,16 +161,20 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
+
   function nextCatalog(){
     const mobile = isMobile();
     const step = mobile ? 1 : 2;
-    const lastStart = mobile ? catalogTotal : catalogTotal - 1;
+    const lastStart = mobile
+      ? catalogTotal
+      : catalogTotal - 1;
 
     if(catalogCurrent + step <= lastStart){
       catalogCurrent += step;
       drawCatalog();
     }
   }
+
 
   function prevCatalog(){
     const mobile = isMobile();
@@ -113,45 +186,56 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
+
   if($('prevBtn')) $('prevBtn').onclick = prevCatalog;
   if($('nextBtn')) $('nextBtn').onclick = nextCatalog;
   if($('zoomPrev')) $('zoomPrev').onclick = prevCatalog;
   if($('zoomNext')) $('zoomNext').onclick = nextCatalog;
 
+
   if($('zoomBtn')){
     $('zoomBtn').onclick = function(){
       if(!modal) return;
+
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+
       drawCatalog();
     };
   }
 
+
   function closeModal(){
     if(!modal) return;
+
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }
 
+
   if($('closeBtn')) $('closeBtn').onclick = closeModal;
   if($('zoomBg')) $('zoomBg').onclick = closeModal;
 
+
   document.addEventListener('keydown', function(e){
     if(!modal || !modal.classList.contains('open')) return;
+
     if(e.key === 'Escape') closeModal();
     if(e.key === 'ArrowLeft') prevCatalog();
     if(e.key === 'ArrowRight') nextCatalog();
   });
 
-  // 화면 방향이나 창 크기가 바뀌면 표시 모드만 전환
+
   function handleCatalogModeChange(){
     if(!isMobile() && catalogCurrent % 2 === 0){
       catalogCurrent = Math.max(1, catalogCurrent - 1);
     }
+
     drawCatalog();
   }
+
 
   if(typeof mobileQuery.addEventListener === 'function'){
     mobileQuery.addEventListener('change', handleCatalogModeChange);
@@ -162,461 +246,292 @@ document.addEventListener('DOMContentLoaded', function(){
   drawCatalog();
 
 
-  
-/* =================================
-   납품실적
-   PC 4개 / 태블릿 2개 / 모바일 1개
-================================= */
+  /* =================================
+     납품실적
+     PC 4개 / 태블릿 2개 / 모바일 1개
+  ================================= */
 
-const recordTrack =
-  document.getElementById('recordTrack');
+  const recordTrack = $('recordTrack');
+  const recordPrev = $('recordPrev');
+  const recordNext = $('recordNext');
+  const recordStatus = $('recordStatus');
+  const recordDotsContainer = $('recordDots');
 
-const recordPrev =
-  document.getElementById('recordPrev');
+  if(recordTrack && recordPrev && recordNext){
 
-const recordNext =
-  document.getElementById('recordNext');
+    const recordItems = Array.from(
+      recordTrack.querySelectorAll('.record-item')
+    );
 
-const recordStatus =
-  document.getElementById('recordStatus');
-
-const recordDotsContainer =
-  document.querySelector('.record-dots');
-
-
-if (
-  !recordTrack ||
-  !recordPrev ||
-  !recordNext
-) {
-  return;
-}
-
-const recordItems = Array.from(
-  recordTrack.querySelectorAll('.record-item')
-);
-
-let cardsPerPage = 4;
-let recordPage = 0;
-let totalRecordPages = 0;
-
-recordPrev.style.zIndex = '30';
-recordNext.style.zIndex = '30';
+    let cardsPerPage = 4;
+    let recordPage = 0;
+    let totalRecordPages = 0;
 
 
-function getCardStep() {
-  if (!recordItems.length) {
-    return 0;
-  }
+    function getCardStep(){
+      if(!recordItems.length) return 0;
 
-  const cardWidth =
-    recordItems[0].getBoundingClientRect().width;
+      const cardWidth =
+        recordItems[0].getBoundingClientRect().width;
 
-  const gap =
-    parseFloat(getComputedStyle(recordTrack).gap) || 0;
+      const gap =
+        parseFloat(getComputedStyle(recordTrack).gap) || 0;
 
-  return cardWidth + gap;
-}
+      return cardWidth + gap;
+    }
 
 
-function drawRecordDots() {
-  if (!recordDotsContainer) {
-    return;
-  }
+    function drawRecordDots(){
+      if(!recordDotsContainer) return;
 
-  recordDotsContainer.innerHTML = '';
+      recordDotsContainer.innerHTML = '';
 
-  for (let i = 0; i < totalRecordPages; i++) {
-    const dot = document.createElement('button');
+      for(let i = 0; i < totalRecordPages; i++){
+        const dot = document.createElement('button');
 
-    dot.type = 'button';
-    dot.classList.toggle('active', i === recordPage);
-    dot.setAttribute('aria-label', `${i + 1}페이지`);
+        dot.type = 'button';
+        dot.classList.toggle('active', i === recordPage);
+        dot.setAttribute('aria-label', `${i + 1}페이지`);
 
-    dot.addEventListener('click', function () {
-      recordPage = i;
-      drawRecords();
-    });
+        dot.addEventListener('click', function(){
+          recordPage = i;
+          drawRecords();
+        });
 
-    recordDotsContainer.appendChild(dot);
-  }
-}
+        recordDotsContainer.appendChild(dot);
+      }
+    }
 
 
-function drawRecords() {
-  const step = getCardStep();
+    function drawRecords(){
+      const step = getCardStep();
 
-  const move =
-    recordPage * cardsPerPage * step;
+      const move =
+        recordPage * cardsPerPage * step;
 
-  recordTrack.style.transform =
-    `translateX(-${move}px)`;
-
-
-  if (recordStatus) {
-    const start =
-      recordPage * cardsPerPage + 1;
-
-    const end =
-      Math.min(
-        start + cardsPerPage - 1,
-        recordItems.length
-      );
-
-    recordStatus.textContent =
-      `${String(start).padStart(2, '0')}–${String(end).padStart(2, '0')} / ${String(recordItems.length).padStart(2, '0')}`;
-  }
+      recordTrack.style.transform =
+        `translateX(-${move}px)`;
 
 
-  if (recordDotsContainer) {
-    Array.from(recordDotsContainer.children).forEach(
-      function (dot, index) {
-        dot.classList.toggle(
-          'active',
-          index === recordPage
+      if(recordStatus){
+        const start =
+          recordPage * cardsPerPage + 1;
+
+        const end = Math.min(
+          start + cardsPerPage - 1,
+          recordItems.length
+        );
+
+        recordStatus.textContent =
+          `${String(start).padStart(2, '0')}–${String(end).padStart(2, '0')} / ${String(recordItems.length).padStart(2, '0')}`;
+      }
+
+
+      if(recordDotsContainer){
+        Array.from(recordDotsContainer.children).forEach(
+          function(dot, index){
+            dot.classList.toggle(
+              'active',
+              index === recordPage
+            );
+          }
         );
       }
-    );
+
+
+      recordPrev.disabled = recordPage === 0;
+
+      recordNext.disabled =
+        recordPage >= totalRecordPages - 1;
+
+      recordPrev.style.opacity =
+        recordPage === 0 ? '.45' : '1';
+
+      recordNext.style.opacity =
+        recordPage >= totalRecordPages - 1 ? '.45' : '1';
+    }
+
+
+    function updateRecordLayout(){
+      const screenWidth =
+        document.documentElement.clientWidth || window.innerWidth;
+
+      if(screenWidth <= 800){
+        cardsPerPage = 1;
+      }else if(screenWidth <= 1100){
+        cardsPerPage = 2;
+      }else{
+        cardsPerPage = 4;
+      }
+
+      totalRecordPages = Math.ceil(
+        recordItems.length / cardsPerPage
+      );
+
+      recordPage = Math.min(
+        recordPage,
+        Math.max(0, totalRecordPages - 1)
+      );
+
+      drawRecordDots();
+      drawRecords();
+    }
+
+
+    recordNext.addEventListener('click', function(e){
+      e.preventDefault();
+
+      if(recordPage < totalRecordPages - 1){
+        recordPage++;
+        drawRecords();
+      }
+    });
+
+
+    recordPrev.addEventListener('click', function(e){
+      e.preventDefault();
+
+      if(recordPage > 0){
+        recordPage--;
+        drawRecords();
+      }
+    });
+
+
+    window.addEventListener('resize', updateRecordLayout);
+
+    updateRecordLayout();
   }
 
 
-  recordPrev.disabled = recordPage === 0;
+  /* =================================
+     게시판
+     7개씩 페이지 이동
+  ================================= */
 
-  recordNext.disabled =
-    recordPage >= totalRecordPages - 1;
-
-  recordPrev.style.opacity =
-    recordPage === 0 ? '.45' : '1';
-
-  recordNext.style.opacity =
-    recordPage >= totalRecordPages - 1 ? '.45' : '1';
-
-  recordPrev.style.display = 'flex';
-  recordNext.style.display = 'flex';
-
-  recordPrev.style.visibility = 'visible';
-  recordNext.style.visibility = 'visible';
-
-  recordPrev.style.pointerEvents = 'auto';
-  recordNext.style.pointerEvents = 'auto';
-}
-
-
-function updateRecordLayout() {
-  const screenWidth = window.innerWidth;
-
-  if (screenWidth <= 800) {
-    cardsPerPage = 1;
-  } else if (screenWidth <= 1100) {
-    cardsPerPage = 2;
-  } else {
-    cardsPerPage = 4;
-  }
-
-  totalRecordPages = Math.ceil(
-    recordItems.length / cardsPerPage
+  const items = Array.from(
+    document.querySelectorAll('#noticeSlider .notice-item')
   );
 
-  recordPage = Math.min(
-    recordPage,
-    Math.max(0, totalRecordPages - 1)
-  );
+  const prev = $('boardPrev');
+  const next = $('boardNext');
+  const status = $('boardStatus');
+  const dotsWrap = $('boardDots');
 
-  drawRecordDots();
-  drawRecords();
-}
+  if(items.length && prev && next){
 
+    const itemsPerPage = 7;
 
-recordNext.addEventListener('click', function (e) {
-  e.preventDefault();
-
-  if (recordPage < totalRecordPages - 1) {
-    recordPage++;
-    drawRecords();
-  }
-});
-
-
-recordPrev.addEventListener('click', function (e) {
-  e.preventDefault();
-
-  if (recordPage > 0) {
-    recordPage--;
-    drawRecords();
-  }
-});
-
-
-window.addEventListener(
-  'resize',
-  updateRecordLayout
-);
-
-updateRecordLayout();
-
-
-/* =================================
-   게시판
-   7개씩 페이지 이동
-================================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const items =
-    Array.from(
-      document.querySelectorAll("#noticeSlider .notice-item")
-    );
-
-  const prev =
-    document.getElementById("boardPrev");
-
-  const next =
-    document.getElementById("boardNext");
-
-  const status =
-    document.getElementById("boardStatus");
-
-  const dotsWrap =
-    document.getElementById("boardDots");
-
-
-  if(
-    !items.length ||
-    !prev ||
-    !next
-  ){
-    return;
-  }
-
-
-  /* 한 페이지에 7개 */
-
-  const itemsPerPage = 7;
-
-  const totalPages =
-    Math.ceil(
+    const totalPages = Math.ceil(
       items.length / itemsPerPage
     );
 
-  let currentPage = 0;
+    let currentPage = 0;
 
 
-  /* =================================
-     페이지 점 만들기
-  ================================= */
+    function createDots(){
+      if(!dotsWrap) return;
 
-  function createDots(){
+      dotsWrap.innerHTML = '';
 
-    if(!dotsWrap){
-      return;
-    }
+      for(let i = 0; i < totalPages; i++){
+        const dot = document.createElement('button');
 
-    dotsWrap.innerHTML = "";
+        dot.type = 'button';
+        dot.setAttribute('aria-label', `${i + 1}페이지`);
 
-
-    for(
-      let i = 0;
-      i < totalPages;
-      i++
-    ){
-
-      const dot =
-        document.createElement("button");
-
-      dot.type = "button";
-
-      dot.setAttribute(
-        "aria-label",
-        `${i + 1}페이지`
-      );
-
-
-      dot.addEventListener(
-        "click",
-        () => {
-
+        dot.addEventListener('click', function(){
           showBoard(i);
+        });
 
-        }
-      );
-
-
-      dotsWrap.appendChild(dot);
-
+        dotsWrap.appendChild(dot);
+      }
     }
 
-  }
 
-
-  /* =================================
-     게시판 페이지 표시
-  ================================= */
-
-  function showBoard(page){
-
-    currentPage =
-      Math.max(
+    function showBoard(page){
+      currentPage = Math.max(
         0,
-        Math.min(
-          page,
-          totalPages - 1
-        )
+        Math.min(page, totalPages - 1)
       );
 
+      const start = currentPage * itemsPerPage;
 
-    const start =
-      currentPage *
-      itemsPerPage;
-
-
-    const end =
-      Math.min(
+      const end = Math.min(
         start + itemsPerPage,
         items.length
       );
 
+      items.forEach((item, index) => {
+        item.style.display =
+          index >= start && index < end
+            ? 'grid'
+            : 'none';
+      });
 
-    /* 7개씩 표시 */
-
-    items.forEach(
-      (item, index) => {
-
-        if(
-          index >= start &&
-          index < end
-        ){
-
-          item.style.display = "grid";
-
-        }else{
-
-          item.style.display = "none";
-
-        }
-
+      if(status){
+        status.textContent =
+          `${String(start + 1).padStart(2, '0')}–${String(end).padStart(2, '0')} / ${String(items.length).padStart(2, '0')}`;
       }
-    );
 
+      prev.disabled = currentPage === 0;
+      next.disabled = currentPage === totalPages - 1;
 
-    /* 숫자 */
-
-    if(status){
-
-      status.textContent =
-        `${String(start + 1).padStart(2,"0")}–` +
-        `${String(end).padStart(2,"0")} / ` +
-        `${String(items.length).padStart(2,"0")}`;
-
-    }
-
-
-    /* 왼쪽 버튼 */
-
-prev.disabled = false;
-
-
-    /* 오른쪽 버튼 */
-
-    next.disabled =
-      currentPage === totalPages - 1;
-
-
-    /* 점 */
-
-    if(dotsWrap){
-
-      Array.from(
-        dotsWrap.querySelectorAll("button")
-      ).forEach(
-        (dot, index) => {
-
-          dot.classList.toggle(
-            "active",
-            index === currentPage
-          );
-
-        }
-      );
-
-    }
-
-  }
-
-
-  /* =================================
-     왼쪽 버튼
-  ================================= */
-
-prev.onclick = function(e){
-
-  e.preventDefault();
-
-  if(currentPage > 0){
-
-    currentPage--;
-
-    showBoard(currentPage);
-
-  }
-
-};
-
-
-  /* =================================
-     오른쪽 버튼
-  ================================= */
-
-  next.addEventListener(
-    "click",
-    () => {
-
-      if(
-        currentPage <
-        totalPages - 1
-      ){
-
-        showBoard(
-          currentPage + 1
+      if(dotsWrap){
+        Array.from(dotsWrap.querySelectorAll('button')).forEach(
+          (dot, index) => {
+            dot.classList.toggle('active', index === currentPage);
+          }
         );
-
       }
-
     }
+
+
+    prev.addEventListener('click', function(e){
+      e.preventDefault();
+
+      if(currentPage > 0){
+        showBoard(currentPage - 1);
+      }
+    });
+
+
+    next.addEventListener('click', function(e){
+      e.preventDefault();
+
+      if(currentPage < totalPages - 1){
+        showBoard(currentPage + 1);
+      }
+    });
+
+
+    createDots();
+    showBoard(0);
+  }
+
+
+  /* =========================================
+     메인 마중이 이미지 슬라이드
+  ========================================= */
+
+  const mascotSlides = Array.from(
+    document.querySelectorAll('.mascot-slide')
   );
 
+  if(mascotSlides.length > 1){
+    let mascotCurrent = 0;
 
-  /* 처음 실행 */
+    setInterval(() => {
+      mascotSlides[mascotCurrent].classList.remove('active');
 
-  createDots();
+      mascotCurrent++;
 
-  showBoard(0);
+      if(mascotCurrent >= mascotSlides.length){
+        mascotCurrent = 0;
+      }
+
+      mascotSlides[mascotCurrent].classList.add('active');
+    }, 3000);
+  }
 
 });
-
-/* =========================================
-   메인 마중이 이미지 슬라이드
-========================================= */
-
-const mascotSlides = Array.from(
-  document.querySelectorAll(".mascot-slide")
-);
-
-if (mascotSlides.length > 1) {
-
-  let mascotCurrent = 0;
-
-  setInterval(() => {
-
-    mascotSlides[mascotCurrent].classList.remove("active");
-
-    mascotCurrent++;
-
-    if (mascotCurrent >= mascotSlides.length) {
-      mascotCurrent = 0;
-    }
-
-    mascotSlides[mascotCurrent].classList.add("active");
-
-  }, 3000);
-
-}

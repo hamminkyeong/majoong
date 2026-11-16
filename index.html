@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>마중산업(주)</title>
-<link rel="stylesheet" href="majoong_catalog_section.css?v=20261106-singlepage3">
+<link rel="stylesheet" href="majoong_catalog_section_fixed.css?v=20261116-fix1">
 
 
 
@@ -1349,53 +1349,6 @@
 </div>
 
 <script>
-/* 납품실적 25개 / 한 화면 4개 페이지 이동 */
-document.addEventListener("DOMContentLoaded", function(){
-  const track = document.getElementById("recordTrack");
-  const items = Array.from(document.querySelectorAll("#recordTrack .record-item"));
-  const prev = document.getElementById("recordPrev");
-  const next = document.getElementById("recordNext");
-  const status = document.getElementById("recordStatus");
-  const dots = Array.from(document.querySelectorAll("#recordDots button"));
-  const perPage = 4;
-  const totalPages = Math.ceil(items.length / perPage);
-  let page = 0;
-
-  function showPage(index){
-    page = Math.max(0, Math.min(index, totalPages - 1));
-
-    /* 모든 카드를 다시 표시하고, 트랙 자체를 페이지 단위로 이동 */
-    items.forEach(item => {
-      item.style.display = "block";
-    });
-
-    const shift = page * 100;
-    const gapOffset = page * 14;
-    track.style.transform = `translateX(calc(-${shift}% - ${gapOffset}px))`;
-
-    const start = page * perPage + 1;
-    const end = Math.min((page + 1) * perPage, items.length);
-
-    if(status){
-      status.textContent =
-        String(start).padStart(2,"0") + "–" +
-        String(end).padStart(2,"0") + " / " +
-        String(items.length).padStart(2,"0");
-    }
-
-    dots.forEach((dot, i) => dot.classList.toggle("active", i === page));
-    if(prev) prev.disabled = page === 0;
-    if(next) next.disabled = page === totalPages - 1;
-  }
-
-  if(prev) prev.addEventListener("click", () => showPage(page - 1));
-  if(next) next.addEventListener("click", () => showPage(page + 1));
-  dots.forEach((dot, i) => dot.addEventListener("click", () => showPage(i)));
-
-  showPage(0);
-});
-</script>
-<script>
 document.addEventListener("DOMContentLoaded", function(){
 
   const buttons = document.querySelectorAll(".recent-news-list button");
@@ -1560,7 +1513,7 @@ const totalPages = Math.ceil(items.length / perPage);
 
 });
 </script>
-<script src="majoong_catalog_section.js?v=20261106-singlepage3"></script>
+<script src="majoong_catalog_section_fixed.js?v=20261116-fix1"></script>
 
 
 <script>
